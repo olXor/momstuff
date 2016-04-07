@@ -2,3 +2,8 @@
 *.swo
 *.exe
 *.stackdump
+backupsavegenbots/
+resultplot/
+savegenbot/
+topbots/
+

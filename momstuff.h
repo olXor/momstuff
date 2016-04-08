@@ -11,6 +11,52 @@
 #include "genbot.h"
 #include "genome.h"
 #include "mt4pipegen.h"
+#include <list>
+
+//---simulation parameters
+#define NUMGENBOTS 3
+#define NUMWINBOTS 2
+#define NUMSTATICTOPBOTS 0
+#define NUMPARENTBOTS 2
+#define NUMTRAINCYCLES 10
+#define CHILD_INHERITS_PARENT_LEARNING 1
+
+//#define STEPFACTOR 0.00005
+#define STEPFACTOR 0.0001
+
+#define NUMOUTPUTS 1
+#define NUMINPUTS 50
+
+#define SKIP_TRAIN_ON_ROUND_1 0
+#define SKIP_TEST_ON_ROUND_1 0
+#define TEST_TESTSET 1
+#define TEST_TRAINSET 1
+#define TEST_TEST2SET 1
+#define TEST_SET "testset"
+#define TRAIN_SET "trainset"
+#define TEST2_SET "test2set"
+
+#define CHECK_TEST 0
+#define CHECK_TRAIN 1
+
+#define INITIAL_OUTPUT_THRESHOLD -120
+
+#define NUM_TRAIN_THREADS 3
+
+static ConvolutionProperties defaultConvProp = {
+    1, {1}, 0, NUMINPUTS-1, {NUMINPUTS}, 1, 1, 1, 1
+};
+//--------------------------
+
+WINDOW* mainwin;
+WINDOW* networkwin;
+WINDOW* errorwin;
+WINDOW* statuswin;
+
+EventLog* eventLog = new EventLog();
+EventLog* networkLog = new EventLog();
+EventLog* errorLog = new EventLog();
+EventLog* statusLog = new EventLog();
 
 struct ThreadInputs {
     Genbot* genbot;
@@ -19,17 +65,19 @@ struct ThreadInputs {
     double* individualerror; //pointer
     double* error;  //pointer
     bool train;
+    int id;
 };
 
 pthread_t* threads;
-std::queue<ThreadInputs> threadQueue;
+std::list<ThreadInputs> threadList;
 pthread_cond_t threadCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t threadMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t processingCond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t processingMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t errorCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t errorMutex = PTHREAD_MUTEX_INITIALIZER;
 int numRunsInQueue = 0;
 int numThreadsProcessing = 0;
+
+int currentThreadGenbotId[NUM_TRAIN_THREADS];   //the id of the genbot each thread is currently running
 
 #endif

@@ -20,51 +20,6 @@
 #define CHILDNODESPERLAYER 5
 //------
 
-WINDOW* mainwin;
-WINDOW* networkwin;
-WINDOW* errorwin;
-WINDOW* statuswin;
-
-EventLog* eventLog = new EventLog();
-EventLog* networkLog = new EventLog();
-EventLog* errorLog = new EventLog();
-EventLog* statusLog = new EventLog();
-
-//---simulation parameters
-#define NUMGENBOTS 3
-#define NUMWINBOTS 2
-#define NUMSTATICTOPBOTS 0
-#define NUMPARENTBOTS 2
-#define NUMTRAINCYCLES 10
-#define CHILD_INHERITS_PARENT_LEARNING 1
-
-//#define STEPFACTOR 0.00005
-#define STEPFACTOR 0.0001
-
-#define NUMOUTPUTS 1
-#define NUMINPUTS 50
-
-#define SKIP_TRAIN_ON_ROUND_1 0
-#define SKIP_TEST_ON_ROUND_1 0
-#define TEST_TESTSET 1
-#define TEST_TRAINSET 1
-#define TEST_TEST2SET 1
-#define TEST_SET "testset"
-#define TRAIN_SET "trainset"
-#define TEST2_SET "test2set"
-
-#define CHECK_TEST 0
-#define CHECK_TRAIN 1
-
-#define INITIAL_OUTPUT_THRESHOLD -120
-
-#define NUM_TRAIN_THREADS 3
-
-static ConvolutionProperties defaultConvProp = {
-    1, {1}, 0, NUMINPUTS-1, {NUMINPUTS}, 1, 1, 1, 1
-};
-//--------------------------
-
 const char* savestring = "savegenbot/";
 const char* datastring = "rawdata/";
 
@@ -80,18 +35,39 @@ int roundNum = 0;
 int currentTrainRun = 0;
 int currentTestRun = 0;
 
+bool checkIfGenbotInUse(int id) {
+    for(int i=0; i<NUM_TRAIN_THREADS; i++) {
+        if(currentThreadGenbotId[i] == id)
+            return true;
+    }
+    return false;
+}
+
+std::list<ThreadInputs>::iterator getOpenInput() {
+    for(std::list<ThreadInputs>::iterator it=threadList.begin(); it != threadList.end(); ++it) {
+        if(!checkIfGenbotInUse((*it).id))
+            return it;
+    }
+    return threadList.end();
+}
+
 void *genbotThread(void* args) {
-    (void)args;
+    int threadID = *((int*)args);
+    free(args);
+
     while(true) {
+        std::list<ThreadInputs>::iterator nextInput;
         pthread_mutex_lock(&threadMutex);
-        while(numRunsInQueue <= 0)
+        while((nextInput = getOpenInput()) == threadList.end())
             pthread_cond_wait(&threadCond, &threadMutex);
-        pthread_mutex_lock(&processingMutex);
-        ThreadInputs inputs = threadQueue.front();
-        threadQueue.pop();
+
+        ThreadInputs inputs;
+
+        inputs = *nextInput;
+        threadList.erase(nextInput);
         numRunsInQueue--;
         numThreadsProcessing++;
-        pthread_mutex_unlock(&processingMutex);
+        currentThreadGenbotId[threadID] = inputs.id;
         pthread_mutex_unlock(&threadMutex);
 
         inputs.genbot->setInputs(&(inputs.inputs[0]), NUMINPUTS);
@@ -109,9 +85,10 @@ void *genbotThread(void* args) {
             inputs.genbot->learnRawOutput(&(inputs.correctoutputs[0]), STEPFACTOR, NUMOUTPUTS);
         }
 
-        pthread_mutex_lock(&processingMutex);
+        pthread_mutex_lock(&threadMutex);
         numThreadsProcessing--;
-        pthread_mutex_unlock(&processingMutex);
+        currentThreadGenbotId[threadID] = -1;
+        pthread_mutex_unlock(&threadMutex);
         pthread_cond_broadcast(&processingCond);
     }
 }
@@ -190,12 +167,6 @@ double runSim(Genbot** genbots, std::string learnsetname, bool train, double* er
                         inputs[j] = 0;
                 }
 
-                pthread_mutex_lock(&processingMutex);
-                while(numThreadsProcessing > 0 || numRunsInQueue > 0) {
-                    pthread_cond_wait(&processingCond, &processingMutex);
-                }
-                pthread_mutex_unlock(&processingMutex);
-
                 for(int j=0; j<NUMGENBOTS; j++) {
                     ThreadInputs threadInputs;
                     threadInputs.genbot = genbots[j];
@@ -207,9 +178,10 @@ double runSim(Genbot** genbots, std::string learnsetname, bool train, double* er
                         threadInputs.individualerror = NULL;
                     threadInputs.error = &error;
                     threadInputs.train = train && (roundNum == 0 || j >= NUMSTATICTOPBOTS);
+                    threadInputs.id = genbots[j]->getID();
 
                     pthread_mutex_lock(&threadMutex);
-                    threadQueue.push(threadInputs);
+                    threadList.push_back(threadInputs);
                     numRunsInQueue++;
                     pthread_mutex_unlock(&threadMutex);
 
@@ -224,11 +196,11 @@ double runSim(Genbot** genbots, std::string learnsetname, bool train, double* er
         }
     }
 
-    pthread_mutex_lock(&processingMutex);
+    pthread_mutex_lock(&threadMutex);
     while(numThreadsProcessing > 0 || numRunsInQueue > 0) {
-        pthread_cond_wait(&processingCond, &processingMutex);
+        pthread_cond_wait(&processingCond, &threadMutex);
     }
-    pthread_mutex_unlock(&processingMutex);
+    pthread_mutex_unlock(&threadMutex);
 
     pthread_mutex_lock(&errorMutex);
     if(numerrors > 0) {
@@ -491,7 +463,12 @@ int main() {
 
     threads = new pthread_t[NUM_TRAIN_THREADS];
     for(int i=0; i<NUM_TRAIN_THREADS; i++) {
-        pthread_create(&threads[i], NULL, &genbotThread, NULL);
+        int* arg = (int*)malloc(sizeof(*arg));
+        if(arg == NULL)
+            throw std::runtime_error("couldn't malloc for thread arg\n");
+        *arg = i;
+        currentThreadGenbotId[i] = -1;
+        pthread_create(&threads[i], NULL, &genbotThread, arg);
     }
 
     Genbot* genbots[NUMGENBOTS];

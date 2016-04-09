@@ -1,0 +1,3 @@
+[submodule "genbot"]
+	path = genbot
+	url = git@github.com:olXor/genbot.git

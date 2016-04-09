@@ -4,13 +4,12 @@
 
 #include <ncurses.h>
 #include <iostream>
-#include "cluster.h"
+#include "genbot/cluster.h"
 #include "event.h"
 #include <string>
 #include <fstream>
-#include "genbot.h"
-#include "genome.h"
-#include "mt4pipegen.h"
+#include "genbot/genbot.h"
+#include "genbot/genome.h"
 #include <list>
 
 //---simulation parameters

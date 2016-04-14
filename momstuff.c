@@ -504,11 +504,11 @@ int main() {
 
     bool done = false;
     while(!done) {
+        adjustNumTrainCycles();
         std::ostringstream oss;
         oss << "Starting round " << roundNum << " (" << numTrainCycles << " cycles)";
         eventLog->addEvent(oss.str().c_str(), mainwin);
         if(!(roundNum == 1 && SKIP_TRAIN_ON_ROUND_1)) {
-            adjustNumTrainCycles();
             for(size_t i=0; i<numTrainCycles; i++) {
                 if(i+1 < currentTrainRun) continue;
                 char* buf;

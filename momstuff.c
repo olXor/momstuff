@@ -319,7 +319,7 @@ void loadCurrentGenbots(Genbot** genbots) {
             Genome* genome = new Genome(defaultConvProp);
             genome->loadGenome(genomefname.str().c_str());
             genome->pars[0]->useOutputTransfer = false;
-            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, id);
+            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, id, PRESET_FIXED_BASE_MINIMAL);
 
             std::ostringstream fname;
             fname << savestring << id << "/bot";
@@ -333,7 +333,7 @@ void loadCurrentGenbots(Genbot** genbots) {
             Genome* genome = new Genome(defaultConvProp);
             genome->createRandomGenome();
             genome->pars[0]->useOutputTransfer = false;
-            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1));
+            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1), PRESET_FIXED_BASE_MINIMAL);
             genbots[i]->setOutputThreshold(INITIAL_OUTPUT_THRESHOLD, 0);
 
             std::ostringstream foldercall;
@@ -406,8 +406,8 @@ std::string processNumSeconds(double t) {
 }
 
 void combineParentInitialConditions(Genbot* child, Genbot* parent1, Genbot* parent2) {
-    Genbot* originalParent1 = new Genbot(parent1->getGenome()->copy(), NUMINPUTS, NUMOUTPUTS, -1);
-    Genbot* originalParent2 = new Genbot(parent2->getGenome()->copy(), NUMINPUTS, NUMOUTPUTS, -1);
+    Genbot* originalParent1 = new Genbot(parent1->getGenome()->copy(), NUMINPUTS, NUMOUTPUTS, -1, PRESET_FIXED_BASE_MINIMAL);
+    Genbot* originalParent2 = new Genbot(parent2->getGenome()->copy(), NUMINPUTS, NUMOUTPUTS, -1, PRESET_FIXED_BASE_MINIMAL);
 
     std::string fhandle;
     if(CHILD_INHERITS_PARENT_LEARNING)
@@ -644,7 +644,7 @@ int main() {
             int parent2 = rand() % NUMPARENTBOTS;
             Genome* genome = genbots[parent1]->getGenome()->mate(genbots[parent2]->getGenome());
             genome->pars[0]->useOutputTransfer = false;
-            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1));
+            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1), PRESET_FIXED_BASE_MINIMAL);
             combineParentInitialConditions(genbots[i], genbots[parent1], genbots[parent2]);
 
             std::ostringstream foldercall;

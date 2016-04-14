@@ -17,8 +17,12 @@
 #define NUMWINBOTS 2
 #define NUMSTATICTOPBOTS 0
 #define NUMPARENTBOTS 2
-#define NUMTRAINCYCLES 30
 #define CHILD_INHERITS_PARENT_LEARNING 1
+
+#define ROUND_NUM_INCREMENT 5
+#define ROUND_GROUP_LENGTH 10
+#define ROUND_MIN_REPLACEMENTS 1
+#define ROUND_MAX_REPLACEMENTS 3
 
 //#define STEPFACTOR 0.00005
 #define STEPFACTOR 0.0001
@@ -78,5 +82,8 @@ int numRunsInQueue = 0;
 int numThreadsProcessing = 0;
 
 int currentThreadGenbotId[NUM_TRAIN_THREADS];   //the id of the genbot each thread is currently running
+
+size_t numTrainCycles = ROUND_NUM_INCREMENT;
+size_t numBotChanges = 0;
 
 #endif

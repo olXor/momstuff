@@ -31,9 +31,9 @@ bool stopAfterNextMT4Run = false;
 bool stopAfterNextTestSet = false;
 bool pauseAfterNextMT4Run = false;
 
-int roundNum = 0;
-int currentTrainRun = 0;
-int currentTestRun = 0;
+size_t roundNum = 0;
+size_t currentTrainRun = 0;
+size_t currentTestRun = 0;
 
 bool checkIfGenbotInUse(int id) {
     for(int i=0; i<NUM_TRAIN_THREADS; i++) {
@@ -234,6 +234,7 @@ void saveStartInfo() {
     outfile << "roundNum " << roundNum << std::endl;
     outfile << "currentTrainRun " << currentTrainRun << std::endl;
     outfile << "currentTestRun " << currentTestRun << std::endl;
+    outfile << "numTrainCycles " << numTrainCycles << std::endl;
     outfile.close();
 }
 
@@ -255,6 +256,8 @@ void loadStartInfo() {
             currentTrainRun = token2;
         if(token1=="currentTestRun")
             currentTestRun = token2;
+        if(token1=="numTrainCycles")
+            numTrainCycles = token2;
     }
     infile.close();
 }
@@ -438,6 +441,18 @@ void combineParentInitialConditions(Genbot* child, Genbot* parent1, Genbot* pare
     delete originalParent2;
 }
 
+void adjustNumTrainCycles() {
+    if(roundNum%ROUND_GROUP_LENGTH != 0)
+        return;
+
+    if(numBotChanges > ROUND_MAX_REPLACEMENTS && numTrainCycles > ROUND_NUM_INCREMENT)
+        numTrainCycles -= ROUND_NUM_INCREMENT;
+    else if(numBotChanges < ROUND_MIN_REPLACEMENTS)
+        numTrainCycles += ROUND_NUM_INCREMENT;
+
+    numBotChanges = 0;
+}
+
 int main() {
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     srand(time(NULL));
@@ -490,10 +505,11 @@ int main() {
     bool done = false;
     while(!done) {
         std::ostringstream oss;
-        oss << "Starting round " << roundNum;
+        oss << "Starting round " << roundNum << " (" << numTrainCycles << " cycles)";
         eventLog->addEvent(oss.str().c_str(), mainwin);
         if(!(roundNum == 1 && SKIP_TRAIN_ON_ROUND_1)) {
-            for(int i=0; i<NUMTRAINCYCLES; i++) {
+            adjustNumTrainCycles();
+            for(size_t i=0; i<numTrainCycles; i++) {
                 if(i+1 < currentTrainRun) continue;
                 char* buf;
                 asprintf(&buf, "starting train %d", i+1);
@@ -603,10 +619,24 @@ int main() {
         profits[2] = trainprofits;
         profits[3] = test2profits;
 
+        int newGenbotIds[NUMGENBOTS-NUMWINBOTS];
+        for(int i=0; i<NUMGENBOTS-NUMWINBOTS; i++) {
+            newGenbotIds[i] = genbots[i+NUMWINBOTS]->getID();
+        }
+
         for(int i=0; i<NUMGENBOTS; i++) {
             profits[0][i] = CHECK_TEST*testprofits[i] + CHECK_TRAIN*trainprofits[i];
         }
         sortByProfit(genbots, profits, 4);
+
+        for(int i=0; i<NUMGENBOTS-NUMWINBOTS; i++) {
+            for(int j=0; j<NUMWINBOTS; j++) {
+                if(genbots[j]->getID() == newGenbotIds[i]) {
+                    numBotChanges++;
+                    continue;
+                }
+            }
+        }
 
         for(int i=0; i<NUMGENBOTS; i++) {
             std::ostringstream entry;
@@ -619,7 +649,7 @@ int main() {
         }
 
         std::ostringstream pss;
-        pss << "Errors for round " << roundNum << ": ";
+        pss << "Errors for round " << roundNum << " (" << numTrainCycles << " cycles): ";
         for(int i=0; i<NUMGENBOTS; i++) {
             pss << genbots[i]->getID() << "=" << testprofits[i] << "(" << trainprofits[i] << "," << test2profits[i] << ")";
             if(i != NUMGENBOTS-1)

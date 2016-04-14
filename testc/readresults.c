@@ -17,7 +17,7 @@ int main() {
         std::vector<double> roundtrainprofs;
         std::vector<double> roundtest2profs;
 
-        lss >> tok >> tok >> tok >> tok; //"Profits for round #:"
+        lss >> tok >> tok >> tok >> tok >> tok >> tok; //"Profits for round # (# cycles):"
         std::size_t prev=0, pos;
         while(lss >> tok) {
             prev = tok.find_first_of("=", 0) + 1;

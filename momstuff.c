@@ -235,6 +235,7 @@ void saveStartInfo() {
     outfile << "currentTrainRun " << currentTrainRun << std::endl;
     outfile << "currentTestRun " << currentTestRun << std::endl;
     outfile << "numTrainCycles " << numTrainCycles << std::endl;
+    outfile << "numBotChanges " << numBotChanges << std::endl;
     outfile.close();
 }
 
@@ -258,6 +259,8 @@ void loadStartInfo() {
             currentTestRun = token2;
         if(token1=="numTrainCycles")
             numTrainCycles = token2;
+        if(token1=="numBotChanges")
+            numBotChanges = token2;
     }
     infile.close();
 }
@@ -453,6 +456,53 @@ void adjustNumTrainCycles() {
     numBotChanges = 0;
 }
 
+void cleanSaveGenbots() {
+    DIR *dir = opendir(savestring);
+
+    struct dirent *entry = readdir(dir);
+
+    while(entry != NULL) {
+        if(entry->d_type == DT_DIR) {
+            std::stringstream ss;
+            ss << entry->d_name;
+            if(ss.str() != "." && ss.str() != "..") {
+                std::stringstream foldername;
+                foldername << savestring << ss.str();
+                std::stringstream historyname;
+                historyname << foldername.str() << "/history";
+                std::ifstream historyfile(historyname.str().c_str());
+                if(historyfile.is_open()) {
+                    std::string line;
+                    std::string prevline;
+                    while(getline(historyfile, line)) {
+                        prevline = line;
+                    }
+                    std::stringstream lastliness(prevline);
+                    lastliness >> line;
+                    std::string roundstring;
+                    lastliness >> roundstring;
+                    if(roundstring.back() == ':')
+                        roundstring = roundstring.substr(0, roundstring.length()-1);
+                    std::stringstream roundnumss;
+                    roundnumss << roundstring;
+                    size_t histroundnum;
+                    if(!(roundnumss >> histroundnum))
+                        continue;
+                    if(roundNum > histroundnum + NUM_ROUNDS_SAVED) {
+                        std::stringstream deletess;
+                        deletess << "rm -r " << foldername.str();
+                        system(deletess.str().c_str());
+                    }
+                }
+            }
+        }
+
+        entry = readdir(dir);
+    }
+
+    closedir(dir);
+}
+
 int main() {
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     srand(time(NULL));
@@ -505,6 +555,18 @@ int main() {
     bool done = false;
     while(!done) {
         adjustNumTrainCycles();
+        if(roundNum%100 == 0) {
+            char* buf;
+            asprintf(&buf, "Cleaning savegenbot");
+            networkLog->addEvent(buf, networkwin);
+            time_t starttime = time(NULL);
+            cleanSaveGenbots();
+            time_t endtime = time(NULL);
+            double secsElapsed = difftime(endtime, starttime);
+            std::ostringstream ost;
+            ost << "Done. (" << processNumSeconds(secsElapsed) << ")";
+            networkLog->addEvent(ost.str().c_str(), networkwin);
+        }
         std::ostringstream oss;
         oss << "Starting round " << roundNum << " (" << numTrainCycles << " cycles)";
         eventLog->addEvent(oss.str().c_str(), mainwin);

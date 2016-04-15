@@ -2,10 +2,9 @@
 #define TESTBOTS_HEADER_FILE
 
 #include <iostream>
-#include "../cluster.h"
-#include "../genbot.h"
-#include "../genome.h"
-#include "../mt4pipegen.h"
+#include "../genbot/cluster.h"
+#include "../genbot/genbot.h"
+#include "../genbot/genome.h"
 #include <fstream>
 #include <string>
 #include <cstdio>

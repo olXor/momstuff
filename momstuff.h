@@ -11,9 +11,10 @@
 #include "genbot/genbot.h"
 #include "genbot/genome.h"
 #include <list>
+#include <dirent.h>
 
 //---simulation parameters
-#define NUMGENBOTS 3
+#define NUMGENBOTS 4
 #define NUMWINBOTS 2
 #define NUMSTATICTOPBOTS 0
 #define NUMPARENTBOTS 2
@@ -22,7 +23,7 @@
 #define ROUND_NUM_INCREMENT 5
 #define ROUND_GROUP_LENGTH 10
 #define ROUND_MIN_REPLACEMENTS 1
-#define ROUND_MAX_REPLACEMENTS 3
+#define ROUND_MAX_REPLACEMENTS 2
 
 //#define STEPFACTOR 0.00005
 #define STEPFACTOR 0.0001
@@ -44,7 +45,9 @@
 
 #define INITIAL_OUTPUT_THRESHOLD -120
 
-#define NUM_TRAIN_THREADS 3
+#define NUM_TRAIN_THREADS 4
+
+#define NUM_ROUNDS_SAVED 100
 
 static ConvolutionProperties defaultConvProp = {
     1, {1}, 0, NUMINPUTS-1, {NUMINPUTS}, 1, 1, 1, 1

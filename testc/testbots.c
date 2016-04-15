@@ -124,8 +124,6 @@ int main() {
 
     std::ostringstream savename;
 
-    int testType = SEPARATE_BOT;
-
     int numGenbots = 1;
     int botnum = 0;
 
@@ -136,7 +134,7 @@ int main() {
         Genome* genome = new Genome(defaultConvProp);
         genome->loadGenome(genomefname.str().c_str());
         genome->pars[0]->useOutputTransfer = false;
-        genbots.push_back(new Genbot(genome, NUMINPUTS, NUMOUTPUTS, id));
+        genbots.push_back(new Genbot(genome, NUMINPUTS, NUMOUTPUTS, id, PRESET_FIXED_BASE_MINIMAL));
 
         std::ostringstream fname;
         fname << "savegenbot/" << id << "/bot";

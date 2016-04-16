@@ -554,19 +554,6 @@ int main() {
 
     bool done = false;
     while(!done) {
-        adjustNumTrainCycles();
-        if(roundNum%100 == 0) {
-            char* buf;
-            asprintf(&buf, "Cleaning savegenbot");
-            networkLog->addEvent(buf, networkwin);
-            time_t starttime = time(NULL);
-            cleanSaveGenbots();
-            time_t endtime = time(NULL);
-            double secsElapsed = difftime(endtime, starttime);
-            std::ostringstream ost;
-            ost << "Done. (" << processNumSeconds(secsElapsed) << ")";
-            networkLog->addEvent(ost.str().c_str(), networkwin);
-        }
         std::ostringstream oss;
         oss << "Starting round " << roundNum << " (" << numTrainCycles << " cycles)";
         eventLog->addEvent(oss.str().c_str(), mainwin);
@@ -775,6 +762,19 @@ int main() {
         roundNum++;
         currentTrainRun = 1;
         currentTestRun = 1;
+        adjustNumTrainCycles();
+        if(roundNum%100 == 0) {
+            char* buf;
+            asprintf(&buf, "Cleaning savegenbot");
+            networkLog->addEvent(buf, networkwin);
+            time_t starttime = time(NULL);
+            cleanSaveGenbots();
+            time_t endtime = time(NULL);
+            double secsElapsed = difftime(endtime, starttime);
+            std::ostringstream ost;
+            ost << "Done. (" << processNumSeconds(secsElapsed) << ")";
+            networkLog->addEvent(ost.str().c_str(), networkwin);
+        }
         saveStartInfo();
         if(stopAfterNextTestSet) break;
         while(pauseAfterNextMT4Run) {

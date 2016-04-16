@@ -12,6 +12,7 @@ echo 'MAX_CONVOLUTIONS 3' >> genbot/gen.cfg
 echo 'MIN_CONVOLUTIONS 1' >> genbot/gen.cfg
 echo 'MAX_CONVOLUTION_NODE_LAYERS 1' >> genbot/gen.cfg
 echo 'MAX_CONVOLUTION_NODESPERLAYER 10' >> genbot/gen.cfg
+echo 'MIN_CONVOLUTION_NODESPERLAYER 1' >> genbot/gen.cfg
 echo 'MAX_CONVOLUTION_DIMENSION 10' >> genbot/gen.cfg
 echo 'MIN_CONVOLUTION_DIMENSION 2' >> genbot/gen.cfg
 echo 'CONVOLUTION_DIMENSION_LAYER_MULTIPLIER 2.0' >> genbot/gen.cfg

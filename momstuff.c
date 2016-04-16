@@ -34,6 +34,7 @@ bool pauseAfterNextMT4Run = false;
 size_t roundNum = 0;
 size_t currentTrainRun = 0;
 size_t currentTestRun = 0;
+size_t nextGenbotID = 1;
 
 bool checkIfGenbotInUse(int id) {
     for(int i=0; i<NUM_TRAIN_THREADS; i++) {
@@ -236,6 +237,7 @@ void saveStartInfo() {
     outfile << "currentTestRun " << currentTestRun << std::endl;
     outfile << "numTrainCycles " << numTrainCycles << std::endl;
     outfile << "numBotChanges " << numBotChanges << std::endl;
+    outfile << "nextGenbotID " << nextGenbotID << std::endl;
     outfile.close();
 }
 
@@ -243,6 +245,7 @@ void loadStartInfo() {
     roundNum = 1;
     currentTrainRun = 1;
     currentTestRun = 1;
+    nextGenbotID = 1;
     std::ifstream infile("savegenbot/startinfo");
     std::string line;
     while(std::getline(infile, line)) {
@@ -261,6 +264,8 @@ void loadStartInfo() {
             numTrainCycles = token2;
         if(token1=="numBotChanges")
             numBotChanges = token2;
+        if(token1=="nextGenbotID")
+            nextGenbotID = token2;
     }
     infile.close();
 }
@@ -296,7 +301,8 @@ void saveCurrentIDs(Genbot** genbots) {
     }
 }
 
-int findNextID(int id) {
+int findNextID() {
+    size_t id = nextGenbotID;
     struct stat info;
     std::ostringstream fname;
     fname << "savegenbot/" << id;
@@ -307,6 +313,7 @@ int findNextID(int id) {
         fname << "savegenbot/" << id;
     }
 
+    nextGenbotID = id + 1;
     return id;
 }
 
@@ -339,7 +346,7 @@ void loadCurrentGenbots(Genbot** genbots) {
             Genome* genome = new Genome(defaultConvProp);
             genome->createRandomGenome();
             genome->pars[0]->useOutputTransfer = false;
-            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1), PRESET_FIXED_BASE_MINIMAL);
+            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(), PRESET_FIXED_BASE_MINIMAL);
             genbots[i]->setOutputThreshold(INITIAL_OUTPUT_THRESHOLD, 0);
 
             std::ostringstream foldercall;
@@ -723,7 +730,7 @@ int main() {
             int parent2 = rand() % NUMPARENTBOTS;
             Genome* genome = genbots[parent1]->getGenome()->mate(genbots[parent2]->getGenome());
             genome->pars[0]->useOutputTransfer = false;
-            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(1), PRESET_FIXED_BASE_MINIMAL);
+            genbots[i] = new Genbot(genome, NUMINPUTS, NUMOUTPUTS, findNextID(), PRESET_FIXED_BASE_MINIMAL);
             combineParentInitialConditions(genbots[i], genbots[parent1], genbots[parent2]);
 
             std::ostringstream foldercall;

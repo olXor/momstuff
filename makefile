@@ -3,7 +3,7 @@ GENBOT_C := $(wildcard genbot/*.c) $(wildcard genbot/*.cpp)
 H_FILES := $(wildcard *.h)
 GENBOT_H := $(wildcard genbot/*.h)
 .PHONY: all
-all: momstuff testbots readresults topbotsave evaluatetopbots
+all: momstuff testbots readresults topbotsave
 momstuff: $(C_FILES) $(H_FILES) $(GENBOT_C) $(GENBOT_H)
 	g++ -g -O3 -Wall -Wextra -o $@ $(C_FILES) $(GENBOT_C) -I. -lncurses -std=gnu++0x -lm #$(wildcard nvwa/*.cpp)
 testbots: testc/testbots.c testc/testbots.h

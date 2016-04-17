@@ -207,6 +207,6 @@ int main() {
         test2top5file << i+1 << " " << avg << std::endl;
     }
 
-    system("gnuplot resultplot/averages.in");
+    system("gnuplot averages.in");
     system("mobapictureviewer resultplot/averages.png");
 }

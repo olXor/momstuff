@@ -49,6 +49,8 @@
 
 #define NUM_ROUNDS_SAVED 100
 
+#define WINDOW_HEIGHT 30
+
 static ConvolutionProperties defaultConvProp = {
     1, {1}, 0, NUMINPUTS-1, {NUMINPUTS}, 1, 1, 1, 1, 0
 };

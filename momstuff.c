@@ -526,8 +526,8 @@ int main() {
     refresh();
 
     statuswin = newwin(2, 160, 0, 0);
-    mainwin = newwin(50, 80, 2, 0);
-    networkwin = newwin(50, 80, 2, 80);
+    mainwin = newwin(WINDOW_HEIGHT, 80, 2, 0);
+    networkwin = newwin(WINDOW_HEIGHT, 80, 2, 80);
     errorwin = newwin(10, 160, 52, 0);
 
     pthread_t statusthread;
